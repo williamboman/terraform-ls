@@ -48,15 +48,18 @@ var dbSchema = &memdb.DBSchema{
 	},
 }
 
+type ChangeHook func(path string)
+
 type StateStore struct {
 	Modules         *ModuleStore
 	ProviderSchemas *ProviderSchemaStore
 }
 
 type ModuleStore struct {
-	db        *memdb.MemDB
-	tableName string
-	logger    *log.Logger
+	db                *memdb.MemDB
+	tableName         string
+	logger            *log.Logger
+	ModuleChangeHooks []ChangeHook
 }
 
 type ModuleReader interface {

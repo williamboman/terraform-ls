@@ -2,6 +2,7 @@ package state
 
 import (
 	"path/filepath"
+	"runtime"
 
 	"github.com/hashicorp/go-memdb"
 	"github.com/hashicorp/go-version"
@@ -371,6 +372,13 @@ func (s *ModuleStore) UpdateModManifest(path string, manifest *datadir.ModuleMan
 		return err
 	}
 
+	txn.Defer(func() {
+		for _, hook := range s.ModuleChangeHooks {
+			s.logger.Printf("%s Sending refresh for %s", funcName(), path)
+			hook(path)
+		}
+	})
+
 	txn.Commit()
 	return nil
 }
@@ -389,6 +397,13 @@ func (s *ModuleStore) SetTerraformVersionState(path string, state op.OpState) er
 	if err != nil {
 		return err
 	}
+
+	txn.Defer(func() {
+		for _, hook := range s.ModuleChangeHooks {
+			s.logger.Printf("%s Sending refresh for %s", funcName(), path)
+			hook(path)
+		}
+	})
 
 	txn.Commit()
 	return nil
@@ -460,6 +475,13 @@ func (s *ModuleStore) UpdateTerraformVersion(modPath string, tfVer *version.Vers
 	if err != nil {
 		return err
 	}
+
+	txn.Defer(func() {
+		for _, hook := range s.ModuleChangeHooks {
+			s.logger.Printf("%s Sending refresh for %s", funcName(), modPath)
+			hook(modPath)
+		}
+	})
 
 	txn.Commit()
 	return nil
@@ -726,4 +748,9 @@ func (s *ModuleStore) UpdateReferenceOrigins(path string, origins lang.Reference
 
 	txn.Commit()
 	return nil
+}
+
+func funcName() string {
+	pc, _, _, _ := runtime.Caller(1)
+	return runtime.FuncForPC(pc).Name()
 }

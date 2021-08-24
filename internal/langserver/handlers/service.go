@@ -49,6 +49,8 @@ type service struct {
 	tfExecFactory    exec.ExecutorFactory
 	tfExecOpts       *exec.ExecutorOpts
 
+	jrpcSvr *jrpc2.Server
+
 	additionalHandlers map[string]rpch.Func
 }
 
@@ -441,6 +443,16 @@ func (svc *service) configureSessionDependencies(cfgOpts *settings.Options) erro
 		return err
 	}
 	store.SetLogger(svc.logger)
+
+	store.Modules.ModuleChangeHooks = []state.ChangeHook{
+		func(p string) {
+			svc.logger.Printf("Sending refresh notification for %s", p)
+			err := svc.jrpcSvr.Notify(svc.srvCtx, "workspace/semanticTokens/refresh", nil)
+			if err != nil {
+				svc.logger.Printf("Error refreshing %s: %s", p, err)
+			}
+		},
+	}
 
 	err = schemas.PreloadSchemasToStore(store.ProviderSchemas)
 	if err != nil {
