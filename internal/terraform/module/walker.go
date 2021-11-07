@@ -272,7 +272,16 @@ func (w *Walker) walk(ctx context.Context, rootPath string) error {
 				if err != nil {
 					return err
 				}
+				err = w.modMgr.EnqueueModuleOp(dir, op.OpTypeDecodeReferenceTargets, nil)
+				if err != nil {
+					return err
+				}
+				err = w.modMgr.EnqueueModuleOp(dir, op.OpTypeDecodeReferenceOrigins, nil)
+				if err != nil {
+					return err
+				}
 			}
+
 			if dataDir.PluginLockFilePath != "" {
 				err = w.modMgr.EnqueueModuleOp(dir, op.OpTypeObtainSchema, nil)
 				if err != nil {

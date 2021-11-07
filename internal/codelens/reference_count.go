@@ -48,7 +48,7 @@ func ReferenceCount(showReferencesCmdId string) lang.CodeLensFunc {
 					defRange = refTarget.DefRangePtr
 				}
 
-				originCount += len(pathCtx.ReferenceOrigins.Targeting(refTarget))
+				originCount += len(pathCtx.ReferenceOrigins.Match(refTarget, path))
 			}
 
 			if originCount == 0 {
